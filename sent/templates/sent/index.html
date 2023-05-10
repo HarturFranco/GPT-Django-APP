@@ -1,0 +1,168 @@
+<!-- sent/templates/sent/index.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LabRI - Análise de sentimentos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 99%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #chat-window {
+            padding: 10px;
+            margin-bottom: 20px;
+            height: 100vh;
+            overflow-y: scroll;
+        }
+
+        p {
+            margin: 5px 0;
+            padding: 5px;
+        }
+
+        .user-message {
+            display: flex;
+            align-items: center;
+            background-color: white;
+        }
+
+        .bot-message {
+            /* display: inline-flex; */
+            align-items: center;
+            background-color: #f2f2f2;
+        }
+
+        .user-message strong,
+        .bot-message strong {
+            margin-right: 10px;
+        }
+
+        .user-message strong {
+            color: #007bff;
+        }
+
+        .bot-message strong {
+            color: #555;
+            text-align: left;
+        }
+
+        form {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 98%;
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f5;
+            padding: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        .clear-chat {
+            background-color: orange;
+        }
+
+        .clear-chat:hover {
+            background-color: rgb(255, 136, 0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LabRI - Análise de sentimentos</h1>
+        <div id="chat-window">
+        </div>
+    </div>
+
+    <form id="chat-form">
+        {% csrf_token %}
+        <input type="text" name="message" id="message" placeholder="Entre com sua mensagem...">
+        <button type="submit">Enviar</button>
+        <button type="button" id="clear-chat-btn", class="clear-chat">Limpar</button>
+    </form>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Mandando o Formulario pelo ajax
+        $('#chat-form').submit(function(event) {
+            event.preventDefault();
+
+        
+
+            // Pegando a ultima mensagem do formulario
+            var userMessage = $('#message').val();
+            
+        
+            // pegando o token CSRF 
+            var csrfToken = $('[name="csrfmiddlewaretoken"]').val();
+
+            // mandando prompt pro get_chat_response
+            $.ajax({
+                type: 'POST',
+                url: '{% url "get_sent_response" %}',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                data: {
+                    'messages': userMessage
+                },
+                success: function(response) { // atualiza janela de chat
+                    var chatResponse = response.chat_response;
+                    console.log(chatResponse)
+                    // Adicionando mensagem do usuario
+                    $('#chat-window').append('<p class="user-message"><strong>User:</strong> ' + userMessage + '</p>');
+
+                    // Adicionando mensagem do chatBot
+                    $('#chat-window').append('<div class="bot-message"><strong>ChatBot:</strong> ' + chatResponse + '</div>');
+
+                    // Limpando o input
+                    $('#message').val('');
+
+                    // Scrollando a janela de texto
+                    $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
+                }
+            });
+        });
+
+        // Evento pra limpar o chat
+        $('#clear-chat-btn').click(function() {
+            // Limpando chat
+            $('#chat-window').empty();
+        });
+    });
+</script>
+
+</body>
+</html>

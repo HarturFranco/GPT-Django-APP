@@ -1,0 +1,177 @@
+<!-- chat/templates/chat/home.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LabRI - ChatGPT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #chat-window {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+            height: 300px;
+            overflow-y: scroll;
+        }
+
+        p {
+            margin: 5px 0;
+            padding: 5px;
+        }
+
+        .user-message {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            /* color: #007bff; */
+        }
+
+        .bot-message {
+            display: flex;
+            align-items: center;
+            background-color: #f2f2f2;
+            /* color: #555; */
+        }
+
+        .user-message strong,
+        .bot-message strong {
+            margin-right: 10px;
+        }
+
+        .user-message strong {
+            color: #007bff;
+        }
+
+        .bot-message strong {
+            color: #555;
+            text-align: left;
+        }
+
+    
+        form {
+            display: flex;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+        /* Clear chat button styles */
+        .clear-chat {
+            background-color: orange;
+        }
+
+        .clear-chat:hover {
+            background-color: rgb(255, 136, 0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LabRI - ChatGPT</h1>
+        <div id="chat-window">
+        </div>
+        <form id="chat-form">
+            {% csrf_token %}
+            <input type="text" name="message" id="message" placeholder="Entre com sua mensagem...">
+            <button type="submit">Enviar</button>
+            <button type="button" id="clear-chat-btn", class="clear-chat">Limpar</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Mandando o Formulario pelo ajax
+        $('#chat-form').submit(function(event) {
+            event.preventDefault();
+
+            // Pegando as mensagens já na janela do chat
+            var messages = [];
+            $('#chat-window p').each(function() {
+                var role = $(this).hasClass('user-message') ? 'user' : 'assistant';
+                var content = $(this).text().replace('User:', '').replace('ChatBot:', '').trim();
+                messages.push({
+                    'role': role,
+                    'content': content
+                });
+            });
+
+            // Pegando a ultima mensagem do formulario
+            var userMessage = $('#message').val();
+            
+            messages.push({
+                'role': 'user',
+                'content': userMessage
+            });
+            // pegando o token CSRF 
+            var csrfToken = $('[name="csrfmiddlewaretoken"]').val();
+
+            // mandando prompt pro get_chat_response
+            $.ajax({
+                type: 'POST',
+                url: '{% url "get_chat_response" %}',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                data: {
+                    'messages': JSON.stringify(messages)
+                },
+                success: function(response) { // atualiza janela de chat
+                    var chatResponse = response.chat_response;
+
+                    // Adicionando mensagem do usuario
+                    $('#chat-window').append('<p class="user-message"><strong>User:</strong> ' + userMessage + '</p>');
+
+                    // Adicionando mensagem do chatBot
+                    $('#chat-window').append('<p class="bot-message"><strong>ChatBot:</strong> ' + chatResponse + '</p>');
+
+                    // Limpando o input
+                    $('#message').val('');
+
+                    // Scrollando a janela de texto
+                    $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
+                }
+            });
+        });
+
+        // Evento pra limpar o chat
+        $('#clear-chat-btn').click(function() {
+            // Limpando chat
+            $('#chat-window').empty();
+        });
+    });
+</script>
+
+</body>
+</html>
