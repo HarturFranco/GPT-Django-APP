@@ -6,7 +6,7 @@ import openai
 import json
 
 # Set up OpenAI credentials
-openai.api_key = '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'
+openai.api_key = 'API-KEY'
 
 def home(request):
     return render(request, 'ner/index.html')

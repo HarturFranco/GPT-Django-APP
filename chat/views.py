@@ -5,7 +5,7 @@ from django.http import JsonResponse
 import openai
 import json
 
-openai.api_key = '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'
+openai.api_key = 'API-KEY'
 
 def home(request):
     return render(request, 'chat/home.html')
